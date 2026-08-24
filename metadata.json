@@ -1,0 +1,8 @@
+{
+  "name": "TIA engine by Technoscope",
+  "description": "Cross-Border Data Transfer & PRA SS2/21 Comprehensive Transfer Impact Assessment (TIA), PRA SS2/21 outsourcing risk evaluation, surveillance legal analysis, 3-pillar remediation matrix, and automated Data Sovereignty Policy generation platform by Technoscope.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
