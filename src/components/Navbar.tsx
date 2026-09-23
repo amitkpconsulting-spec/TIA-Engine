@@ -9,16 +9,18 @@ import {
   Globe2, 
   Cpu, 
   Sparkles, 
-  CheckCircle2,
-  FolderOpen,
-  TrendingDown,
-  Server,
-  Share2,
-  ArrowLeftRight,
-  Home
+  CheckCircle2, 
+  FolderOpen, 
+  TrendingDown, 
+  Server, 
+  Share2, 
+  ArrowLeftRight, 
+  Home,
+  Clock
 } from 'lucide-react';
 import { CASE_STUDIES } from '../data/caseStudies';
 import { TransferProfile } from '../types/tia';
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface NavbarProps {
   currentProfile: TransferProfile;
@@ -30,6 +32,7 @@ interface NavbarProps {
   onOpenConsole: () => void;
   onOpenIntegrationModal?: () => void;
   onOpenPrintModal?: () => void;
+  onOpenGuidedSetup?: () => void;
   isAiAvailable: boolean;
 }
 
@@ -43,11 +46,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenConsole,
   onOpenIntegrationModal,
   onOpenPrintModal,
+  onOpenGuidedSetup,
   isAiAvailable
 }) => {
   return (
     <header className="bg-[#0F0F10] text-[#D1D5DB] border-b border-[#262626] sticky top-0 z-50 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-[95%] max-w-[2560px] mx-auto px-1 sm:px-3">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Title (Clickable Home Action) */}
           <button
@@ -136,6 +140,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Tools */}
           <div className="flex items-center gap-2">
+            {/* Theme Switcher (Includes TweakCN Stella theme) */}
+            <ThemeSwitcher />
+
+            {onOpenGuidedSetup && (
+              <button
+                onClick={onOpenGuidedSetup}
+                className="px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-wider font-bold text-amber-300 bg-amber-950/70 hover:bg-amber-900/90 rounded border border-amber-500/40 transition-colors flex items-center gap-1.5 cursor-pointer shadow-[0_0_8px_rgba(245,158,11,0.2)]"
+                title="Launch Guided Compliance Setup Wizard"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Guided Setup</span>
+              </button>
+            )}
+
             {onOpenIntegrationModal && (
               <button
                 onClick={onOpenIntegrationModal}
@@ -187,7 +205,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             { id: 'prudential', label: 'SS2/21 MTP Register', icon: Database, code: 'SEC_07' },
             { id: 'policy', label: 'Policy Studio', icon: FileText, code: 'SEC_08' },
             { id: 'jurisdictions', label: 'Surveillance DB', icon: Globe2, code: 'SEC_09' },
-            { id: 'server', label: 'Server Status', icon: Server, code: 'SEC_10' },
+            { id: 'activity', label: 'Activity Log', icon: Clock, code: 'SEC_10' },
+            { id: 'server', label: 'Server Status', icon: Server, code: 'SEC_11' },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -214,3 +233,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+

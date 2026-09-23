@@ -974,7 +974,7 @@ export const RemediationDashboardView: React.FC<RemediationDashboardProps> = ({
   const isAnyFilterActive = searchQuery || pillarFilter !== 'ALL' || statusFilter !== 'ALL' || priorityFilter !== 'ALL' || dateFilter !== 'ALL';
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16 font-mono text-[#D1D5DB]">
+    <div className="space-y-6 w-full mx-auto pb-16 font-mono text-[#D1D5DB]">
       {/* Top Banner & Header */}
       <div className="bg-[#0F0F10] rounded-xl border border-[#262626] p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>

@@ -57,7 +57,7 @@ export const ThreePillarMatrixView: React.FC<ThreePillarMatrixViewProps> = ({
   );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 font-mono">
+    <div className="space-y-6 w-full mx-auto pb-12 font-mono">
       
       {/* ========================================================================= */}
       {/* TOP PDF EXPORT ACTION BAR & HEADER */}

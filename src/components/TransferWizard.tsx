@@ -252,7 +252,7 @@ export const TransferWizard: React.FC<TransferWizardProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 w-full mx-auto pb-12">
       {/* Wizard Step Selector */}
       <div className="bg-[#0F0F10] rounded-xl border border-[#262626] p-4 shadow-sm font-mono">
         <div className="flex items-center justify-between overflow-x-auto no-scrollbar gap-2">

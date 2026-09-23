@@ -31,7 +31,7 @@ import {
 import { TransferProfile, TIAEvaluationResult } from '../types/tia';
 import { generatePillarReportData, PillarReportData } from '../utils/threePillarReports';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 
 interface CustomizablePrintModalProps {
   isOpen: boolean;
@@ -182,7 +182,10 @@ export const CustomizablePrintModal: React.FC<CustomizablePrintModalProps> = ({
       setPdfStatus('PDF Downloaded Successfully!');
     } catch (err) {
       console.error('PDF Generation Error:', err);
-      window.print();
+      setPdfStatus('Direct PDF export error. Opening print preview...');
+      setTimeout(() => {
+        window.print();
+      }, 300);
     } finally {
       setTimeout(() => {
         setIsGeneratingPdf(false);

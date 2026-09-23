@@ -302,7 +302,7 @@ export const ServerStatusView: React.FC<ServerStatusViewProps> = ({ onOpenConsol
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 font-mono text-[#D1D5DB]">
+    <div className="space-y-6 w-full mx-auto pb-12 font-mono text-[#D1D5DB]">
       {/* Top Banner */}
       <div className="bg-[#0F0F10] rounded-xl border border-[#262626] p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>

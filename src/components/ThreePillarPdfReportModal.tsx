@@ -27,7 +27,7 @@ import {
 import { TransferProfile, TIAEvaluationResult } from '../types/tia';
 import { generatePillarReportData, PillarType, PillarReportData } from '../utils/threePillarReports';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 
 interface ThreePillarPdfReportModalProps {
   isOpen: boolean;
@@ -113,8 +113,10 @@ export const ThreePillarPdfReportModal: React.FC<ThreePillarPdfReportModalProps>
       setPdfGenerationStatus('PDF successfully downloaded!');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Unable to generate automated PDF. Triggering direct browser Print/Save dialog instead.');
-      window.print();
+      setPdfGenerationStatus('Direct PDF compilation unavailable. Opening print view...');
+      setTimeout(() => {
+        window.print();
+      }, 300);
     } finally {
       setTimeout(() => {
         setIsGeneratingPdf(false);

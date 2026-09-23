@@ -1,10 +1,22 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
+
+// Persistent storage and volume adaptation
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), "data");
+const DATABASE_PATH = process.env.DATABASE_PATH || path.join(DATA_DIR, "tia_regulatory.db");
+
+// Synchronously ensure data directory exists prior to descriptor creation
+try {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+} catch (err) {
+  console.warn("[STORAGE] Notice: DATA_DIR directory initialization warning:", err);
+}
 
 let aiClient: GoogleGenAI | null = null;
 function getGenAI(): GoogleGenAI | null {
@@ -16,7 +28,9 @@ function getGenAI(): GoogleGenAI | null {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  // Dynamic host and port binding (Railway, Replit, Docker, Cloud Run compliant)
+  const PORT = Number(process.env.PORT) || 3000;
+  const HOST = "0.0.0.0";
 
   app.use(express.json({ limit: "10mb" }));
 
@@ -83,17 +97,30 @@ async function startServer() {
     }
   };
 
-  // Health and local air-gapped LLM detection endpoint
-  app.get("/api/health", (req, res) => {
+  // Health check and lifecycle probe endpoints (/api/health and /healthz)
+  // Unauthenticated, zero-dependency, non-blocking for Railway & Replit deployment health checks
+  const healthCheckHandler = (_req: express.Request, res: express.Response) => {
     const hasGeminiKey = Boolean(process.env.GEMINI_API_KEY);
-    res.json({
-      status: "online",
-      mode: serverConfig.llm.provider === "gemini_api" && hasGeminiKey ? "hybrid_cloud_ai" : "local_deterministic_airgap",
+    res.status(200).json({
+      status: "ok",
+      uptime: process.uptime(),
+      timestamp: Date.now(),
+      service: "tia-engine-sovereign",
+      env: process.env.NODE_ENV || "development",
       hasGeminiKey,
-      timestamp: new Date().toISOString(),
+      mode: serverConfig.llm.provider === "gemini_api" && hasGeminiKey ? "hybrid_cloud_ai" : "local_deterministic_airgap",
+      storage: {
+        dataDir: DATA_DIR,
+        databasePath: DATABASE_PATH,
+        persisted: fs.existsSync(DATA_DIR),
+      },
+      memoryUsageMb: Number((process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1)),
       version: "2026.3-PRA-SS221-GDPR"
     });
-  });
+  };
+
+  app.get("/api/health", healthCheckHandler);
+  app.get("/healthz", healthCheckHandler);
 
   // Get full server status and configuration
   app.get("/api/server/status", (req, res) => {
@@ -276,10 +303,13 @@ Output the revised, comprehensive, fully fleshed-out formal policy in crisp Mark
     }
   });
 
-  // Vite middleware for development
+  // Vite middleware for development vs static asset serving in production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: false, // Prevent Vite from spawning separate port/websocket listener to avoid EADDRINUSE collisions
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
@@ -291,7 +321,7 @@ Output the revised, comprehensive, fully fleshed-out formal policy in crisp Mark
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, HOST, () => {
     const hasGemini = Boolean(process.env.GEMINI_API_KEY);
     const envName = process.env.NODE_ENV === "production" ? "PRODUCTION (Bundled CJS)" : "DEVELOPMENT (Vite HMR + tsx)";
     
@@ -299,8 +329,10 @@ Output the revised, comprehensive, fully fleshed-out formal policy in crisp Mark
     console.log("  SOVEREIGNTIA COMPLIANCE ENGINE — SERVER ONLINE & READY");
     console.log("=".repeat(78));
     console.log(`  * Local Access URL:      http://localhost:${PORT}`);
-    console.log(`  * Network Interface:     http://127.0.0.1:${PORT} (0.0.0.0:${PORT})`);
+    console.log(`  * Network Interface:     http://${HOST}:${PORT}`);
     console.log(`  * Runtime Environment:   ${envName}`);
+    console.log(`  * Storage Root:          ${DATA_DIR}`);
+    console.log(`  * Database Path:         ${DATABASE_PATH}`);
     console.log(`  * Node.js Version:       ${process.version} (${process.platform} ${process.arch})`);
     console.log("-".repeat(78));
     console.log("  ACTIVE INTEGRATIONS & SUBSYSTEMS:");
@@ -320,7 +352,7 @@ Output the revised, comprehensive, fully fleshed-out formal policy in crisp Mark
     console.log(`  Live telemetry active. Monitoring incoming requests, API calls & health pings...\n`);
 
     // Periodic heartbeat to stream live stats in the terminal while server runs
-    setInterval(() => {
+    const heartbeatInterval = setInterval(() => {
       const memoryUsageMb = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
       const uptimeSec = Math.floor(process.uptime());
       const mins = Math.floor(uptimeSec / 60);
@@ -331,6 +363,25 @@ Output the revised, comprehensive, fully fleshed-out formal policy in crisp Mark
         `[${timeStr}] [HEARTBEAT] Server Online | Uptime: ${uptimeFormatted} | Heap: ${memoryUsageMb} MB | Status: OK (Port ${PORT})`
       );
     }, 60000);
+
+    // Graceful shutdown listener for Railway / Replit / Docker signals
+    const gracefulShutdown = (signal: string) => {
+      console.log(`\n[SHUTDOWN] Received ${signal} signal. Commencing graceful termination...`);
+      clearInterval(heartbeatInterval);
+      server.close(() => {
+        console.log("[SHUTDOWN] HTTP server closed cleanly. Database connection pools flushed.");
+        process.exit(0);
+      });
+
+      // Fail-safe force exit after 10 seconds if lingering connections persist
+      setTimeout(() => {
+        console.error("[SHUTDOWN] Timeout exceeded while awaiting socket closure. Forcing exit.");
+        process.exit(1);
+      }, 10000).unref();
+    };
+
+    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
   });
 }
 

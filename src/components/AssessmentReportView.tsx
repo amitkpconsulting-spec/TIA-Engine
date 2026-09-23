@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   AlertTriangle, 
@@ -11,6 +11,7 @@ import {
   FileText, 
   ExternalLink,
   ChevronRight,
+  ChevronDown,
   Download,
   Copy,
   Info,
@@ -21,31 +22,55 @@ import {
   Printer,
   Share2,
   Fingerprint,
-  ArrowLeftRight
+  ArrowLeftRight,
+  FileSpreadsheet,
+  Sparkles
 } from 'lucide-react';
 import { TransferProfile, TIAEvaluationResult } from '../types/tia';
 import { JURISDICTIONS } from '../data/jurisdictions';
 import { ThreePillarPdfReportModal } from './ThreePillarPdfReportModal';
 import { RiskAppetiteRadarChart } from './RiskAppetiteRadarChart';
 import { PillarType } from '../utils/threePillarReports';
+import { PrioritizedComplianceActionItems } from './PrioritizedComplianceActionItems';
+import { downloadAuditCsv } from '../utils/auditExporter';
+import { StatusBadge } from './StatusBadge';
 
 interface AssessmentReportViewProps {
   profile: TransferProfile;
   evaluation: TIAEvaluationResult;
   onNavigateTab: (tab: string) => void;
   onOpenIntegrationModal?: () => void;
+  onOpenPrintModal?: () => void;
+  onUpdateProfile?: (updated: TransferProfile) => void;
+  onOpenGuidedSetup?: () => void;
+  onShowToast?: (message: string) => void;
 }
 
 export const AssessmentReportView: React.FC<AssessmentReportViewProps> = ({
   profile,
   evaluation,
   onNavigateTab,
-  onOpenIntegrationModal
+  onOpenIntegrationModal,
+  onOpenPrintModal,
+  onUpdateProfile,
+  onOpenGuidedSetup,
+  onShowToast
 }) => {
   const jurisdiction = JURISDICTIONS[profile.importerCountry];
   const [copied, setCopied] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [pdfModalPillar, setPdfModalPillar] = useState<PillarType>('Consolidated');
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [isOnboardingSkipped, setIsOnboardingSkipped] = useState(false);
+
+  useEffect(() => {
+    try {
+      const skipped = localStorage.getItem('tia_onboarding_skipped') === 'true';
+      setIsOnboardingSkipped(skipped);
+    } catch (e) {
+      // silent
+    }
+  }, []);
 
   const handleOpenPdf = (pillar: PillarType) => {
     setPdfModalPillar(pillar);
@@ -58,32 +83,23 @@ export const AssessmentReportView: React.FC<AssessmentReportViewProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const getVerdictBadge = (verdict: string) => {
-    switch (verdict) {
-      case 'Approved':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-            VALIDATED_COMPLIANT
-          </span>
-        );
-      case 'Approved with Conditions':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold bg-amber-950/80 text-amber-400 border border-amber-500/40 shadow-[0_0_8px_rgba(245,158,11,0.2)]">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-            CONDITIONAL_APPROVAL
-          </span>
-        );
-      case 'Prohibited':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold bg-rose-950/80 text-rose-400 border border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]">
-            <XCircle className="w-3.5 h-3.5 text-rose-400" />
-            PROHIBITED_DEFICIT
-          </span>
-        );
-      default:
-        return null;
+  const handleDownloadCsv = () => {
+    downloadAuditCsv(profile, evaluation);
+    if (onShowToast) {
+      onShowToast('✓ Downloaded Compliance Audit Report (.CSV) sorted Critical-first.');
     }
+  };
+
+  const handleDownloadPdf = () => {
+    if (onOpenPrintModal) {
+      onOpenPrintModal();
+    } else {
+      handleOpenPdf('Consolidated');
+    }
+  };
+
+  const getVerdictBadge = (verdict: string) => {
+    return <StatusBadge status={verdict} size="md" />;
   };
 
   const getRiskColor = (score: number) => {
@@ -93,7 +109,26 @@ export const AssessmentReportView: React.FC<AssessmentReportViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 w-full mx-auto pb-12 font-sans">
+      {/* Onboarding Bypass Banner (Prompt to configure settings later) */}
+      {isOnboardingSkipped && onOpenGuidedSetup && (
+        <div className="bg-amber-950/50 border border-amber-500/50 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono shadow-sm">
+          <div className="flex items-center gap-2.5 text-amber-200">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              <strong>Baseline Configuration Notice:</strong> You are currently using default generic compliance settings. Launch the setup wizard to configure your specific regulatory region & industry sector.
+            </span>
+          </div>
+          <button
+            onClick={onOpenGuidedSetup}
+            className="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-black font-bold rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.25)]"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Launch Guided Setup</span>
+          </button>
+        </div>
+      )}
+
       {/* Top Banner / Assessment Meta */}
       <div className="bg-[#0F0F10] rounded-xl border border-[#262626] p-6 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#262626] pb-5">
@@ -125,31 +160,76 @@ export const AssessmentReportView: React.FC<AssessmentReportViewProps> = ({
           </div>
 
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-[#141415] p-1 rounded border border-[#262626]">
+            <div className="flex items-center gap-1.5 bg-[#141415] p-1 rounded-xl border border-[#262626]">
               <button
                 onClick={() => onNavigateTab('comparison')}
-                className="px-2.5 py-1.5 rounded text-xs font-mono font-semibold text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-700/50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-700/50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                 title="Compare this TIA against another draft, saved profile, or benchmark"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Compare</span>
               </button>
 
-              <button
-                onClick={() => handleOpenPdf('Consolidated')}
-                className="px-3 py-1.5 rounded text-xs font-mono font-bold text-black bg-emerald-400 hover:bg-emerald-300 transition-colors flex items-center gap-1.5 cursor-pointer shadow-[0_0_8px_rgba(16,185,129,0.3)]"
-                title="Export Comprehensive 3-Pillar PDF Report"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Export 3-Pillar PDF</span>
-              </button>
+              {/* Epic 4: Audit-Ready Export Report Dropdown (.PDF / .CSV) */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsExportMenuOpen(prev => !prev)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold text-black bg-emerald-400 hover:bg-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(16,185,129,0.35)]"
+                  title="Export Audit-Ready Report (.PDF or .CSV)"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export Report</span>
+                  <ChevronDown className="w-3 h-3 text-black" />
+                </button>
+
+                {isExportMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-[#141415] border border-[#262626] rounded-xl shadow-2xl z-50 p-1.5 font-mono text-xs animate-in fade-in zoom-in-95 duration-150">
+                    <button
+                      onClick={() => {
+                        setIsExportMenuOpen(false);
+                        handleDownloadCsv();
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#1E1E22] text-[#D1D5DB] hover:text-white flex items-start gap-2.5 cursor-pointer transition-colors"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="font-bold text-white flex items-center gap-1.5">
+                          <span>Download .CSV</span>
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">Critical First</span>
+                        </div>
+                        <div className="text-[10px] text-[#71717A] mt-0.5">
+                          Audit summary dataset sorted by risk hierarchy
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setIsExportMenuOpen(false);
+                        handleDownloadPdf();
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#1E1E22] text-[#D1D5DB] hover:text-white flex items-start gap-2.5 cursor-pointer transition-colors mt-0.5 border-t border-[#1F1F22]"
+                    >
+                      <FileText className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="font-bold text-white flex items-center gap-1.5">
+                          <span>Download .PDF Dossier</span>
+                        </div>
+                        <div className="text-[10px] text-[#71717A] mt-0.5">
+                          Formatted print dossier with timestamp & company metadata
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="text-right">
               <div className="text-[10px] text-[#71717A] font-mono uppercase">Status Verdict</div>
               <div className="mt-0.5">{getVerdictBadge(evaluation.verdict)}</div>
             </div>
-            <div className={`px-4 py-2 rounded border flex flex-col items-center justify-center font-mono ${getRiskColor(evaluation.overallRiskScore)}`}>
+            <div className={`px-4 py-2 rounded-lg border flex flex-col items-center justify-center font-mono ${getRiskColor(evaluation.overallRiskScore)}`}>
               <span className="text-[9px] uppercase tracking-widest font-semibold text-[#A1A1AA]">Risk Index</span>
               <span className="text-2xl font-black">{evaluation.overallRiskScore}<span className="text-xs font-normal text-[#71717A]">/100</span></span>
             </div>
@@ -184,6 +264,16 @@ export const AssessmentReportView: React.FC<AssessmentReportViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Prioritized Compliance Action Items (Epic 2 & Epic 3: Plain Language & Bulk Actions) */}
+      {onUpdateProfile && (
+        <PrioritizedComplianceActionItems
+          profile={profile}
+          evaluation={evaluation}
+          onUpdateProfile={onUpdateProfile}
+          onShowToast={onShowToast || (() => {})}
+        />
+      )}
 
       {/* SECTION 1: Executive Summary & Risk Rating */}
       <section className="bg-[#0F0F10] rounded-xl border border-[#262626] p-6 shadow-sm">

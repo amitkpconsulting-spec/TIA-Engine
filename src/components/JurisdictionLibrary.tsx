@@ -33,7 +33,7 @@ export const JurisdictionLibrary: React.FC = () => {
   const selectedCountry = JURISDICTIONS[selectedCountryKey] || countries[0];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 w-full mx-auto pb-12">
       {/* Header */}
       <div className="bg-[#0F0F10] rounded-xl border border-[#262626] p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#262626] pb-4">

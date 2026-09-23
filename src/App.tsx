@@ -11,6 +11,9 @@ import { ThreePillarMatrixView } from './components/ThreePillarMatrixView';
 import { PrudentialChecklistView } from './components/PrudentialChecklistView';
 import { PolicyGeneratorView } from './components/PolicyGeneratorView';
 import { JurisdictionLibrary } from './components/JurisdictionLibrary';
+import { ActivityLogView } from './components/ActivityLogView';
+import { OnboardingSetupModal } from './components/OnboardingSetupModal';
+import { ToastNotification } from './components/ToastNotification';
 import { AirGapConsole } from './components/AirGapConsole';
 import { CrossFrameworkIntegrationModal } from './components/CrossFrameworkIntegrationModal';
 import { CustomizablePrintModal } from './components/CustomizablePrintModal';
@@ -18,14 +21,32 @@ import { CASE_STUDIES } from './data/caseStudies';
 import { TransferProfile } from './types/tia';
 import { evaluateTIA } from './utils/tiaEngine';
 import { generateUniqueTiaId } from './utils/tiaIdGenerator';
+import { useTheme } from './context/ThemeContext';
 
 export default function App() {
+  const { currentTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<string>('assessment');
   const [profile, setProfile] = useState<TransferProfile>(CASE_STUDIES['core-banking-us-cloud']);
   const [isConsoleOpen, setIsConsoleOpen] = useState<boolean>(false);
   const [isIntegrationModalOpen, setIsIntegrationModalOpen] = useState<boolean>(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
   const [customPolicyText, setCustomPolicyText] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Guided Onboarding triggers on first login if not completed/skipped
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(() => {
+    try {
+      const completed = localStorage.getItem('tia_onboarding_completed') === 'true';
+      const skipped = localStorage.getItem('tia_onboarding_skipped') === 'true';
+      return !completed && !skipped;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+  };
 
   // Compute evaluation dynamically whenever profile changes
   const evaluation = useMemo(() => {
@@ -154,7 +175,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-[#D1D5DB] flex flex-col font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div
+      data-theme={currentTheme}
+      className="min-h-screen bg-[#0A0A0B] text-[#D1D5DB] flex flex-col font-sans antialiased selection:bg-amber-500/30 selection:text-amber-200 app-root w-full"
+    >
       {/* Top Navigation */}
       <Navbar
         currentProfile={profile}
@@ -166,17 +190,25 @@ export default function App() {
         onOpenConsole={() => setIsConsoleOpen(true)}
         onOpenIntegrationModal={() => setIsIntegrationModalOpen(true)}
         onOpenPrintModal={() => setIsPrintModalOpen(true)}
+        onOpenGuidedSetup={() => setIsOnboardingModalOpen(true)}
         isAiAvailable={true}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Main Content Area: 95% screen coverage with zero wasted margins */}
+      <main className="flex-1 w-[95%] max-w-[2560px] mx-auto px-1 sm:px-2 py-6">
         {activeTab === 'assessment' && (
           <AssessmentReportView
             profile={profile}
             evaluation={evaluation}
             onNavigateTab={setActiveTab}
             onOpenIntegrationModal={() => setIsIntegrationModalOpen(true)}
+            onOpenPrintModal={() => setIsPrintModalOpen(true)}
+            onUpdateProfile={(updated) => {
+              setProfile(updated);
+              setCustomPolicyText(null);
+            }}
+            onOpenGuidedSetup={() => setIsOnboardingModalOpen(true)}
+            onShowToast={showToast}
           />
         )}
 
@@ -242,6 +274,12 @@ export default function App() {
           <JurisdictionLibrary />
         )}
 
+        {activeTab === 'activity' && (
+          <ActivityLogView
+            onNavigateHome={() => setActiveTab('assessment')}
+          />
+        )}
+
         {activeTab === 'server' && (
           <ServerStatusView
             onOpenConsole={() => setIsConsoleOpen(true)}
@@ -251,7 +289,7 @@ export default function App() {
 
       {/* Technical Telemetry & Compliance Footer */}
       <footer className="py-3 bg-[#080809] text-[#71717A] text-[10px] font-mono border-t border-[#262626] uppercase tracking-wider">
-        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="w-[95%] max-w-[2560px] mx-auto px-1 sm:px-2 flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1.5 text-center md:text-left">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
@@ -331,6 +369,27 @@ export default function App() {
         }}
         profile={profile}
         evaluation={evaluation}
+      />
+
+      {/* Guided Setup & Smart Defaults Modal (Epic 1) */}
+      <OnboardingSetupModal
+        isOpen={isOnboardingModalOpen}
+        onClose={() => setIsOnboardingModalOpen(false)}
+        onApplyConfig={(configuredProfile) => {
+          setProfile(configuredProfile);
+          setCustomPolicyText(null);
+          setActiveTab('assessment');
+          showToast('✓ Successfully applied Guided Setup baseline configuration!');
+        }}
+        onSkip={() => {
+          showToast('Loaded generic baseline. You can re-open Guided Setup anytime from the toolbar.');
+        }}
+      />
+
+      {/* Reusable Toast Notification */}
+      <ToastNotification
+        message={toastMessage}
+        onDismiss={() => setToastMessage(null)}
       />
     </div>
   );

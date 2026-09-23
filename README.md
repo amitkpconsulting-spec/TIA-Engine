@@ -28,9 +28,37 @@ The engine automates the end-to-end statutory workflow mandated by:
 * 🌐 **Visual Data Flow & Transit Mapping**: Real-time canvas illustrating exporter-to-importer data pipelines, intermediate transit routing, cloud hypervisor memory boundaries, and cryptographic barrier enforcement.
 * 💾 **Session Auto-Save & Crash-Resilient Local Persistence**: Continuous 15-second periodic auto-save and debounced state caching to browser LocalStorage, preventing accidental data loss during extensive multi-step legal and technical scoping sessions with 1-click draft restoration.
 * 📸 **Encrypted State Snapshot & Disaster Recovery**: 1-click manual encrypted blob snapshot download (`.tiasnap.json`) utilizing **AES-GCM-256** and **PBKDF2-SHA256 (100,000 rounds)** with SHA-256 tamper-evident integrity hashing for offsite backup and round-trip assessment restoration.
+* 📁 **14 Regulated Financial Industry Case Studies & Presets Library**: Production-grade transfer scenarios spanning Tier-1 core banking, Lloyd's insurance syndicates, high-frequency trading AI, private wealth, biometric AML/KYC, and multi-party cryptographic asset custody.
 * ⚖️ **Side-by-Side TIA Comparison Mode & Delta Engine**: Multi-profile comparison suite allowing DPOs and CISOs to select two different TIA profiles from browser LocalStorage (live session, auto-saved drafts, saved profile library, preset benchmarks, or uploaded JSON/snapshot files) to visualize side-by-side risk score reductions, GDPR/PRA verdict progressions, 3-pillar safeguard improvements, and granular remediation gap closures.
 * 🔗 **Unique TIA Identification & Cross-Framework GRC Interoperability**: Every assessed transfer profile is provisioned with a triple-tier canonical ID bundle (`TIA-2026-XXXX-XXXX`, RFC 4122 UUID v4, and standard URN `urn:grc:tia:...`), enabling automated sync and pre-built JSON payload generation for **ServiceNow VRM/GRC**, **OneTrust TIA**, **PRA Table 5 MTP Outsourcing Register**, **DORA Chapter V ICT Register**, and **NIST OSCAL**.
 * 🛡️ **Air-Gapped Sovereign Execution & Local LLM Bridge**: Operates deterministically with zero data exfiltration for air-gapped secure bank perimeters, with optional hybrid connectivity to server-side Gemini API or local Ollama instances (`llama3.3:70b`).
+
+---
+
+## 📁 Available Presets Library
+
+The engine incorporates **14 production-grade regulated transfer scenarios** covering major international cross-border corridors, regulatory standards, and technology architectures:
+
+* 🏦 **Tier-1 UK Bank — Core Banking & Ledger SaaS Migration** (🇺🇸 United States)
+* 🛡️ **Global Solvency II Insurer — Policy Administration & Claims BPO** (🇮🇳 India)
+* ⚡ **PRA-Designated Investment Firm — Quantitative AI Model Execution** (🇸🇬 Singapore)
+* 🏢 **Financial Holding Group — Enterprise HR & Payroll Cloud** (🇨🇦 Canada)
+* 🛡️ **Retail Payment Provider — Real-Time Anti-DDoS & WAF Protection** (🇮🇱 Israel)
+* 🏦 **Private Wealth Bank — High-Net-Worth Portfolio Optimization** (🇨🇭 Switzerland)
+* 💳 **Neo-Bank & Fintech — Real-Time Facial Biometrics & AML Screening** (🇺🇸 United States)
+* 🛡️ **Major Life & Pensions Insurer — Actuarial Longevity Grid Compute** (🇦🇺 Australia)
+* ⚡ **UK Asset Manager — Low-Latency Equities Matching Cloud** (🇯🇵 Japan)
+* 🛡️ **Lloyd’s Reinsurance Syndicate — Spatial Catastrophe Risk Modelling** (🇩🇪 Germany)
+* 🔐 **FCA Cryptoasset Firm — Multi-Party Computation Key Sharding in DIFC** (🇦🇪 United Arab Emirates)
+* 🚢 **Global Trade Bank — Cross-Border Letter of Credit & OCR Engine** (🇧🇷 Brazil)
+* 🏡 **Building Society — Offshore Mortgage Underwriting & Income Verification** (🇿🇦 South Africa)
+* 💱 **Wholesale Investment Bank — Asian FX Liquidity Pooling & Clearing Hub** (🇭🇰 Hong Kong)
+
+### 🛠️ Where to Access the Presets
+
+* **Top Navigation Bar**: Select any preset from the **Presets** dropdown to switch the active assessment across the app.
+* **Transfer Wizard Toolbar**: Click **Presets (14)** to open the searchable visual library modal to filter by sector (Banking, Insurance, Investment & AI, FinTech) and load configurations directly.
+* **Comparison Mode Tab**: Select any two presets to perform differential gap analysis across legal safeguards, PRA SS2/21 resilience benchmarks, and data protection scores.
 
 ---
 
@@ -205,6 +233,10 @@ For on-premises, classified, or zero-trust financial infrastructure requiring st
 
 | Module | Component | Description |
 | :--- | :--- | :--- |
+| **Guided Onboarding & Smart Defaults** | `OnboardingSetupModal.tsx` | Guided setup wizard prompting region & industry upon first visit to populate calibrated rules with bypass support and inline validation. |
+| **Prioritized Action Items & Bulk Remediation** | `PrioritizedComplianceActionItems.tsx` | Plain English findings sorted strictly by risk severity (Critical ➔ Warnings ➔ Compliant) with progressive disclosure, multi-select, and 1-click bulk remediation. |
+| **Audit-Ready Export Engine** | `auditExporter.ts`, `CustomizablePrintModal.tsx` | Instant .CSV and .PDF audit report exports retaining risk hierarchy (Critical first) with timestamps and company metadata. |
+| **Immutable Activity & Regulatory Log** | `ActivityLogView.tsx`, `activityLogger.ts` | Tamper-evident, non-repudiable audit trail recording who modified settings, executed bulk fixes, and status transitions with multi-parameter filtering. |
 | **Transfer Intake Wizard** | `TransferWizard.tsx`, `autoSaveManager.ts` | Multi-step interactive flow with 15s auto-save persistence, capturing legal entities, country pairs, transfer mechanisms, data classifications, and technical controls. |
 | **Remediation & Risk Dashboard** | `RemediationDashboardView.tsx` | Comprehensive mitigation interface featuring 3-pillar progress bars, burndown charts, dynamic residual scoring, and the cognitive Suggested Actions engine. |
 | **3-Pillar Safeguards Matrix** | `ThreePillarMatrixView.tsx` | Granular assessment matrix across Technical (EDPB 01/2020), Legal (SCC Clauses 14-15), and Organizational (PRA SS2/21) controls. |
